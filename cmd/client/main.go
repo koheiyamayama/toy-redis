@@ -12,7 +12,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	if n, err := conn.Write([]byte("HelloWorld")); err == nil {
+	if n, err := conn.Write([]byte("000100000GEThoge")); err == nil {
 		fmt.Printf("write %d bytes\n", n)
 	} else {
 		fmt.Println(err.Error())
