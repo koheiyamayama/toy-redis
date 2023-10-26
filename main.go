@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 )
@@ -36,18 +36,20 @@ func main() {
 
 func handleConn(conn net.Conn, kv *KV) {
 	slog.Info("start handling connection")
-	by := make([]byte, 1024)
-	conn.Read(by)
-	slog.Info("connection payload: " + string(by))
-	b, err := io.ReadAll(conn)
-	if err != nil {
-		slog.Error(err.Error())
-		panic(err)
-	}
+
+	r := bufio.NewReader(conn)
+	b, err := r.ReadBytes('\n')
+	b = b[:len(b)-1]
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
-	fmt.Printf("version: %s, command: %s, payload: %s\n", ver, command, payload)
+	slog.Info("query", map[string]any{
+		"query":   string(b),
+		"version": string(ver),
+		"command": string(command),
+		"payload": string(payload),
+	})
+
 	switch {
 	case bytes.Equal(command, GET):
 		result, err = kv.GET(payload)
@@ -59,12 +61,11 @@ func handleConn(conn net.Conn, kv *KV) {
 	}
 
 	if err != nil {
-		fmt.Println(err.Error())
-		panic(err)
+		slog.Info(err.Error())
+		result = []byte(err.Error())
 	}
 
 	if _, err := conn.Write(result); err != nil {
-		fmt.Println(err.Error())
-		panic(err)
+		slog.Info(err.Error())
 	}
 }

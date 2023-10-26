@@ -1,4 +1,8 @@
 # io.ReadAllの処理が終わらない
+0c401c496fccb9640de17695fb862f474044caad で./cmd/client/main.goを実行すると、main.handleConn内のio.ReadAllの処理が終わらない。
+これを調査する。
+
+まず、io.ReadAllの中身はこうなってた。
 ```golang
 package io
 // ReadAll reads from r until an error or EOF and returns the data it read.
@@ -35,3 +39,11 @@ func ReadAll(r Reader) ([]byte, error) {
 	}
 }
 ```
+
+どうもr.ReadでEOFが返るまで読み込むっぽい。
+つまり、EOFが返ってないから処理が無限ループしているっぽい。
+net.ConnがEOFを返すのはcloseされたコネクションに対して操作しようとした時っぽい。
+https://castaneai.hatenablog.com/entry/2020/01/09/193539
+
+じゃあ、どうするかっていうとそもそもbufioを使う実装が多そう？
+https://github.com/venilnoronha/tcp-echo-server/blob/master/main.go#L45

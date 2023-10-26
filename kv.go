@@ -12,8 +12,10 @@ type KV struct {
 
 func NewKV() *KV {
 	return &KV{
-		mu:    &sync.RWMutex{},
-		store: map[string][]byte{},
+		mu: &sync.RWMutex{},
+		store: map[string][]byte{
+			"hoge": []byte("fuga"),
+		},
 	}
 }
 
@@ -24,8 +26,8 @@ func (kv *KV) GET(key []byte) ([]byte, error) {
 	kv.mu.RUnlock()
 
 	// この型の代入、無駄多そう
-	value = append([]byte("+"), value...)
 	if ok {
+		value = append([]byte("+"), value...)
 		return value, nil
 	} else {
 		return value, fmt.Errorf("this key does not exist: key=%s", string(key))
