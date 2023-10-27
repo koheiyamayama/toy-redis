@@ -1,6 +1,9 @@
 package main
 
-import "log/slog"
+import (
+	"bytes"
+	"log/slog"
+)
 
 func ParseQuery(b []byte) (version []byte, command []byte, value []byte) {
 	if len(b) >= 12 {
@@ -16,5 +19,10 @@ func ParseQuery(b []byte) (version []byte, command []byte, value []byte) {
 }
 
 func ParseSet(b []byte) (key, value []byte) {
-	return key, value
+	splitBytes := bytes.Split(b, []byte("\r"))
+	if len(splitBytes) != 2 {
+		slog.Error("SET command handles two arguments: %s", string(b))
+		return key, value
+	}
+	return splitBytes[0], splitBytes[1]
 }
