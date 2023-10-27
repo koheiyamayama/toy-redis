@@ -51,12 +51,7 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
-	slog.Info("query", map[string]any{
-		"query":   string(b),
-		"version": string(ver),
-		"command": string(command),
-		"payload": string(payload),
-	})
+	slog.Info("query", map[string]any{"query": string(b), "version": string(ver), "command": string(command), "payload": string(payload)})
 
 	switch {
 	case bytes.Equal(command, GET):
@@ -65,7 +60,7 @@ func handleConn(conn net.Conn, kv *KV) {
 		key, value := ParseSet(payload)
 		kv.SET(key, value)
 	default:
-		_, err = conn.Write([]byte("NOP!"))
+		result = []byte("NOP")
 	}
 
 	if err != nil {
@@ -75,5 +70,6 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	if _, err := conn.Write(result); err != nil {
 		slog.Info(err.Error())
+		conn.Close()
 	}
 }

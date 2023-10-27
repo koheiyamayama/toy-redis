@@ -12,6 +12,29 @@ c4fd100
 
 のどちらかっぽさそう。
 
+って思ってたが、ロジックが悪かった。
+クライアント側でconn.Writeを2回実行していると、
+```
+000100000SEThogehogehogehoge\rfugafuga2times\n000100000GEThogehogehogehoge\n
+```
+っていうストリームができる。
+整形するとこうなる。
+```
+SET hogehogehogehoge fugafuga2times
+GET hogehogehogehoge
+```
+
+処理を見ると、こんな感じになっている。
+```golang
+		r := bufio.NewReader(conn)
+		b, err := r.ReadBytes('\n')
+		b = b[:len(b)-1]
+```
+こうすると、ストリームからSETコマンドしか読み込まない。
+無限ループしてもGETコマンドを読み込まないので、どうもReadBytesは全て読みだしてから区切っている？
+このあたりどうするか考えないといけない。
+コネクションに書き込まれたコマンドを全て読みだして実行するっていう感じにしないといけない。
+
 # io.ReadAllの処理が終わらない
 0c401c496fccb9640de17695fb862f474044caad で./cmd/client/main.goを実行すると、main.handleConn内のio.ReadAllの処理が終わらない。
 これを調査する。
