@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"os"
 )
 
 var (
@@ -15,6 +16,10 @@ var (
 )
 
 func main() {
+	jHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})
+	logger := slog.New(jHandler)
+	slog.SetDefault(logger)
+
 	l, err := net.Listen("tcp", "localhost:9999")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -36,6 +41,9 @@ func main() {
 
 func handleConn(conn net.Conn, kv *KV) {
 	slog.Info("start handling connection")
+	defer func() {
+		slog.Info("complete handling connection")
+	}()
 
 	r := bufio.NewReader(conn)
 	b, err := r.ReadBytes('\n')
