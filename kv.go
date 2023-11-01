@@ -10,7 +10,7 @@ type KV struct {
 	store map[string][]byte
 }
 
-var NotExistsKey = errors.New("not found key")
+var ErrNotExistsKey = errors.New("not found key")
 
 func NewKV() *KV {
 	return &KV{
@@ -30,7 +30,7 @@ func (kv *KV) Get(key []byte) ([]byte, error) {
 		value = append([]byte("+"), value...)
 		return value, nil
 	} else {
-		return value, NotExistsKey
+		return value, ErrNotExistsKey
 	}
 }
 

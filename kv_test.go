@@ -18,6 +18,6 @@ func TestGetAndSet(t *testing.T) {
 
 	v, err = kv.Get([]byte("not_exists_key"))
 	assert.Equal(t, []byte(nil), v)
-	assert.EqualError(t, err, NotExistsKey.Error())
+	assert.EqualError(t, err, ErrNotExistsKey.Error())
 
 }
