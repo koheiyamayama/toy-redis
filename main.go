@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -40,6 +41,7 @@ func main() {
 }
 
 func handleConn(conn net.Conn, kv *KV) {
+	ctx := context.Background()
 	slog.Info("start handling connection")
 	defer func() {
 		slog.Info("complete handling connection")
@@ -51,14 +53,18 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
-	slog.Info("query", map[string]any{"query": string(b), "version": string(ver), "command": string(command), "payload": string(payload)})
-
+	slog.LogAttrs(ctx, slog.LevelInfo, "query",
+		slog.String("query", string(b)),
+		slog.String("version", string(ver)),
+		slog.String("command", string(command)),
+		slog.String("payload", string(payload)),
+	)
 	switch {
 	case bytes.Equal(command, GET):
-		result, err = kv.GET(payload)
+		result, err = kv.Get(payload)
 	case bytes.Equal(command, SET):
 		key, value := ParseSet(payload)
-		kv.SET(key, value)
+		kv.Set(key, value)
 	default:
 		result = []byte("NOP")
 	}
