@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net"
 	"os"
+
+	"github.com/koheiyamayama/toy-redis/logger"
 )
 
 var (
@@ -53,12 +55,13 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
-	slog.LogAttrs(ctx, slog.LevelInfo, "query",
+	logger.InfoCtx(ctx, "query",
 		slog.String("query", string(b)),
 		slog.String("version", string(ver)),
 		slog.String("command", string(command)),
 		slog.String("payload", string(payload)),
 	)
+
 	switch {
 	case bytes.Equal(command, GET):
 		result, err = kv.Get(payload)
