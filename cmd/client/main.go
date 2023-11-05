@@ -15,6 +15,7 @@ func main() {
 	value := []byte("fugafuga2times")
 	setPayload := fmt.Sprintf("%s\r%s", key, value)
 	setQuery := fmt.Sprintf("000100000SET%s\n", setPayload)
+	fmt.Println(setQuery)
 	if n, err := conn.Write([]byte(setQuery)); err == nil {
 		fmt.Printf("write %d bytes\n", n)
 	} else {
