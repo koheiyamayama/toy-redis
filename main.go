@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 
 	"github.com/koheiyamayama/toy-redis/logger"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -25,17 +26,26 @@ func main() {
 
 	l, err := net.Listen("tcp", "localhost:9999")
 	if err != nil {
-		fmt.Println(err.Error())
+		slog.Error(err.Error())
 		return
 	}
 
 	kv := NewKV()
 
+	slog.Info("start exposing metrics for Prometheus")
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}()
+
 	slog.Info("start koheiyamayama/toy-redis")
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println(err.Error())
+			slog.Error(err.Error())
 		}
 
 		go handleConn(conn, kv)
