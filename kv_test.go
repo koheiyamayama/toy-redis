@@ -8,7 +8,9 @@ import (
 
 func TestGetAndSet(t *testing.T) {
 	kv := NewKV()
-	ok, err := kv.Set([]byte("key"), []byte("value"))
+	// TODO: テストケース修正
+	// - expireEntryのテストする
+	ok, err := kv.Set([]byte("key"), []byte("value"), 0)
 	assert.Equal(t, true, ok)
 	assert.Nil(t, err)
 
@@ -20,4 +22,8 @@ func TestGetAndSet(t *testing.T) {
 	assert.Equal(t, []byte(nil), v)
 	assert.EqualError(t, err, ErrNotExistsKey.Error())
 
+}
+
+func TestDel(t *testing.T) {
+	t.SkipNow()
 }

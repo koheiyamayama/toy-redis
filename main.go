@@ -20,7 +20,12 @@ var (
 )
 
 func main() {
-	jHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})
+	level := new(slog.LevelVar)
+	level.Set(GetLogLevel())
+	jHandler := slog.NewJSONHandler(
+		os.Stdout,
+		&slog.HandlerOptions{Level: level},
+	)
 	logger := slog.New(jHandler)
 	slog.SetDefault(logger)
 
@@ -76,8 +81,8 @@ func handleConn(conn net.Conn, kv *KV) {
 	case bytes.Equal(command, GET):
 		result, err = kv.Get(payload)
 	case bytes.Equal(command, SET):
-		key, value := ParseSet(payload)
-		kv.Set(key, value)
+		key, value, exp := ParseSet(payload)
+		kv.Set(key, value, exp)
 	default:
 		result = []byte("NOP")
 	}

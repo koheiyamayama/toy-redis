@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"strconv"
 )
 
 func ParseQuery(b []byte) (version []byte, command []byte, value []byte) {
@@ -16,10 +17,12 @@ func ParseQuery(b []byte) (version []byte, command []byte, value []byte) {
 	}
 }
 
-func ParseSet(b []byte) (key, value []byte) {
+func ParseSet(b []byte) (key, value []byte, exp uint32) {
 	splitBytes := bytes.Split(b, []byte("\r"))
-	if len(splitBytes) != 2 {
-		return key, value
+	if len(splitBytes) != 3 {
+		return key, value, exp
 	}
-	return splitBytes[0], splitBytes[1]
+	e, _ := strconv.Atoi(string(splitBytes[2]))
+
+	return splitBytes[0], splitBytes[1], uint32(e)
 }

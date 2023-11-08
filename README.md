@@ -14,3 +14,11 @@
   - EXPIRE
 - 以下の機能を実装する
   - レプリケーション
+
+# 環境変数
+- TOY_REDIS_LOG_LEVEL
+  - log/slogパッケージのログレベルに依存する
+  - LevelDebug Level = -4
+ 	- LevelInfo  Level = 0
+	- LevelWarn  Level = 4
+	- LevelError Level = 8
