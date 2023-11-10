@@ -1,13 +1,9 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"log/slog"
 	"sync"
 	"time"
-
-	"github.com/koheiyamayama/toy-redis/logger"
 )
 
 type KV struct {
@@ -48,10 +44,8 @@ func (kv *KV) Set(key []byte, value []byte, exp uint32) (ok bool, err error) {
 	kv.mu.RUnlock()
 
 	if exists {
-		slog.Debug("exists key")
 		kv.Expire(key, exp)
 	} else {
-		slog.Debug("not exists key")
 		kv.mu.Lock()
 		// この変換、無駄が多そう
 		kv.store[string(key)] = value
@@ -63,26 +57,27 @@ func (kv *KV) Set(key []byte, value []byte, exp uint32) (ok bool, err error) {
 }
 
 func (kv *KV) Expire(key []byte, exp uint32) (ok bool, err error) {
-	slog.Debug("before writing doneExpChan")
-	kv.doneExpChan <- struct{}{}
-	slog.Debug("after writing doneExpChan")
-	return kv.expire(key, exp)
+	var exists bool
+	kv.mu.RLock()
+	_, exists = kv.store[string(key)]
+	kv.mu.Unlock()
+
+	if exists {
+		kv.doneExpChan <- struct{}{}
+		return kv.expire(key, exp)
+	} else {
+		return false, ErrNotExistsKey
+	}
 }
 
 func (kv *KV) expire(key []byte, exp uint32) (ok bool, err error) {
-	logger.DebugCtx(context.Background(), "expireEntry",
-		slog.String("key", string(key)),
-	)
-
 	go func(k []byte, exp uint32) {
 		for {
 			select {
 			case <-time.After(time.Duration(exp) * time.Second):
-				slog.Debug("delete entry by kv#expireEntry")
 				kv.Del(key)
 				return
 			case <-kv.doneExpChan:
-				slog.Debug("kv.doneExpChan")
 				return
 			}
 		}

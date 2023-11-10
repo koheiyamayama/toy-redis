@@ -17,6 +17,7 @@ var (
 	GREETING = []byte("Hello World")
 	GET      = []byte("00000GET")
 	SET      = []byte("00000SET")
+	EXPIRE   = []byte("00EXPIRE")
 )
 
 func main() {
@@ -70,8 +71,8 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
-	logger.InfoCtx(ctx, "query",
-		slog.String("query", string(b)),
+	logger.InfoCtx(ctx, "command",
+		slog.String("request", string(b)),
 		slog.String("version", string(ver)),
 		slog.String("command", string(command)),
 		slog.String("payload", string(payload)),
@@ -83,6 +84,13 @@ func handleConn(conn net.Conn, kv *KV) {
 	case bytes.Equal(command, SET):
 		key, value, exp := ParseSet(payload)
 		kv.Set(key, value, exp)
+	case bytes.Equal(command, EXPIRE):
+		key, exp := ParseExpire(b)
+		ok, eErr := kv.Expire(key, exp)
+		if !ok {
+			result = nil
+			err = eErr
+		}
 	default:
 		result = []byte("NOP")
 	}

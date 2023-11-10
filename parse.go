@@ -22,7 +22,19 @@ func ParseSet(b []byte) (key, value []byte, exp uint32) {
 	if len(splitBytes) != 3 {
 		return key, value, exp
 	}
+	// この変換どうにかしたい
 	e, _ := strconv.Atoi(string(splitBytes[2]))
 
 	return splitBytes[0], splitBytes[1], uint32(e)
+}
+
+func ParseExpire(b []byte) (key []byte, exp uint32) {
+	splitBytes := bytes.Split(b, []byte("\r"))
+	if len(splitBytes) == 2 {
+		return key, exp
+	}
+	// この変換どうにかしたい
+	e, _ := strconv.Atoi(string(splitBytes[2]))
+
+	return splitBytes[0], uint32(e)
 }

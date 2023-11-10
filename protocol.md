@@ -5,6 +5,8 @@
 
 
 # GET
+キーに対する値を取得する。
+
 ## command
 0001,00000GET,key
 
@@ -12,12 +14,27 @@
 ok,type,value
 
 # SET
+キーに対して値をセットする。
+expにセットされた秒数後に削除される。
+expはuin32型。
+
 ## command
-可変長な値の区切り文字どうする？
-今のままだとkeyとvalueの区切りができない？
-0001,00000SET,len(key)key,len(value)value,expire
+- protocol
+  - 000100000SETkey\rvalue\rexpire\n
+- cli
+  - set key value exp
 
 ## result
 ok
 error
 
+# EXPIRE
+キーがセットされたエントリーのexpを更新する。
+
+## command
+- protocol
+  - 000100EXPIREkey\rexpire\n
+- cli
+  - expire key exp
+## result
+ok
