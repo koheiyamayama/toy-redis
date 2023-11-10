@@ -11,16 +11,18 @@ import (
 )
 
 type KV struct {
-	mu    *sync.RWMutex
-	store map[string][]byte
+	mu          *sync.RWMutex
+	doneExpChan chan struct{}
+	store       map[string][]byte
 }
 
 var ErrNotExistsKey = errors.New("not found key")
 
 func NewKV() *KV {
 	return &KV{
-		mu:    &sync.RWMutex{},
-		store: map[string][]byte{},
+		mu:          &sync.RWMutex{},
+		store:       map[string][]byte{},
+		doneExpChan: make(chan struct{}),
 	}
 }
 
@@ -40,24 +42,53 @@ func (kv *KV) Get(key []byte) ([]byte, error) {
 }
 
 func (kv *KV) Set(key []byte, value []byte, exp uint32) (ok bool, err error) {
-	kv.mu.Lock()
-	// この変換、無駄が多そう
-	kv.store[string(key)] = value
-	kv.mu.Unlock()
+	var exists bool
+	kv.mu.RLock()
+	_, exists = kv.store[string(key)]
+	kv.mu.RUnlock()
 
-	go kv.expireEntry(key, exp)
+	if exists {
+		slog.Debug("exists key")
+		kv.Expire(key, exp)
+	} else {
+		slog.Debug("not exists key")
+		kv.mu.Lock()
+		// この変換、無駄が多そう
+		kv.store[string(key)] = value
+		kv.mu.Unlock()
+		kv.expire(key, exp)
+	}
+
 	return true, nil
 }
 
-func (kv *KV) expireEntry(key []byte, exp uint32) (ok bool, err error) {
+func (kv *KV) Expire(key []byte, exp uint32) (ok bool, err error) {
+	slog.Debug("before writing doneExpChan")
+	kv.doneExpChan <- struct{}{}
+	slog.Debug("after writing doneExpChan")
+	return kv.expire(key, exp)
+}
+
+func (kv *KV) expire(key []byte, exp uint32) (ok bool, err error) {
 	logger.DebugCtx(context.Background(), "expireEntry",
 		slog.String("key", string(key)),
-		slog.Uint64("exp", uint64(exp)),
 	)
 
-	<-time.After(time.Second * time.Duration(exp))
-	slog.Debug("delete entry by kv#expireEntry")
-	return kv.Del(key)
+	go func(k []byte, exp uint32) {
+		for {
+			select {
+			case <-time.After(time.Duration(exp) * time.Second):
+				slog.Debug("delete entry by kv#expireEntry")
+				kv.Del(key)
+				return
+			case <-kv.doneExpChan:
+				slog.Debug("kv.doneExpChan")
+				return
+			}
+		}
+	}(key, exp)
+
+	return true, nil
 }
 
 func (kv *KV) Del(key []byte) (ok bool, err error) {

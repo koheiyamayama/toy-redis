@@ -1,4 +1,20 @@
-# expireを実装する
+# Delコマンドを実装する
+
+# Expireコマンドを実装する
+toy-redisのexpireについて
+entryがストアから削除される。その時間を設定できる。
+entryがセットされてから削除されるまでの秒数。
+expireは更新可能で、更新すると、更新後から削除されるまでの秒数を設定できる。
+
+時間軸的にはこういう感じ。
+---set---expired
+---set---expire---expired
+---set---expire---expire---...
+---set(key1)---set(key1)---expired
+
+setで同じキーを更新したときもexpireを更新する必要がある。
+
+# setのexpireを実装する
 - Setのインターフェイスを拡張する
 - Setで受け取ったint秒後にキャッシュデータを削除する
   - https://pkg.go.dev/time#After おそらくtime.Afterを使うと良さそう
