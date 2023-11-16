@@ -10,6 +10,8 @@ import (
 	"os"
 
 	"github.com/koheiyamayama/toy-redis/logger"
+	"github.com/prometheus/client_golang/prometheus"
+	promCollectors "github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -18,6 +20,15 @@ var (
 	GET      = []byte("00000GET")
 	SET      = []byte("00000SET")
 	EXPIRE   = []byte("00EXPIRE")
+)
+
+var (
+	cmdProcessed = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "toy_redis_command_counter",
+		Help: "total of processed commands",
+	}, []string{"command"})
+
+	goRuntimeCollector = promCollectors.NewGoCollector(promCollectors.WithGoCollectorRuntimeMetrics(promCollectors.MetricsAll))
 )
 
 func main() {
@@ -36,10 +47,14 @@ func main() {
 		return
 	}
 
+	reg := prometheus.NewRegistry()
+	reg.Register(goRuntimeCollector)
+	reg.Register(cmdProcessed)
+
 	kv := NewKV()
 
 	slog.Info("start exposing metrics for Prometheus")
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	go func() {
 		err := http.ListenAndServe(":8080", nil)
 		if err != nil {

@@ -8,7 +8,7 @@ export const options = {
 
 export default function () {
   let conn = tcp.connect('localhost:9999');
-  tcp.write(conn, '000100000SEThoge\rfuga\n');
+  tcp.write(conn, '000100000SEThoge\rfuga\r100\n');
   tcp.close(conn);
 
   conn = tcp.connect('localhost:9999');
