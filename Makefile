@@ -9,6 +9,3 @@ run-toy-redis-on-debug-mode:
 
 run-toy-redis:
 	go run .
-
-start-monitoring:
-	docker compose -f compose.monitor.yml up
