@@ -41,7 +41,7 @@ func main() {
 	logger := slog.New(jHandler)
 	slog.SetDefault(logger)
 
-	l, err := net.Listen("tcp", "localhost:9999")
+	l, err := net.Listen("tcp", "0.0.0.0:9999")
 	if err != nil {
 		slog.Error(err.Error())
 		return
@@ -82,7 +82,9 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	r := bufio.NewReader(conn)
 	b, err := r.ReadBytes('\n')
-	b = b[:len(b)-1]
+	if err == nil {
+		b = b[:len(b)-1]
+	}
 
 	var result []byte
 	ver, command, payload := ParseQuery(b)
@@ -93,6 +95,7 @@ func handleConn(conn net.Conn, kv *KV) {
 		slog.String("payload", string(payload)),
 	)
 
+	cmdProcessed.With(prometheus.Labels{"command": string(command)}).Inc()
 	switch {
 	case bytes.Equal(command, GET):
 		result, err = kv.Get(payload)

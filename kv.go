@@ -23,8 +23,6 @@ func NewKV() *KV {
 }
 
 func (kv *KV) Get(key []byte) ([]byte, error) {
-	defer cmdProcessed.WithLabelValues("GET").Inc()
-
 	kv.mu.RLock()
 	// この変換、無駄が多そう
 	value, ok := kv.store[string(key)]
@@ -40,8 +38,6 @@ func (kv *KV) Get(key []byte) ([]byte, error) {
 }
 
 func (kv *KV) Set(key []byte, value []byte, exp uint32) (ok bool, err error) {
-	defer cmdProcessed.WithLabelValues("SET").Inc()
-
 	var exists bool
 	kv.mu.RLock()
 	_, exists = kv.store[string(key)]
@@ -62,8 +58,6 @@ func (kv *KV) Set(key []byte, value []byte, exp uint32) (ok bool, err error) {
 }
 
 func (kv *KV) Expire(key []byte, exp uint32) (ok bool, err error) {
-	defer cmdProcessed.WithLabelValues("EXPIRE").Inc()
-
 	var exists bool
 	kv.mu.RLock()
 	_, exists = kv.store[string(key)]

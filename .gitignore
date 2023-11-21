@@ -1,2 +1,6 @@
 .vscode
 k6
+node_modules
+dist
+testdata.json
+loadtesting.db
