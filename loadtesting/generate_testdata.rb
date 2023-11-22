@@ -4,7 +4,7 @@ require 'securerandom'
 require 'json'
 require "sqlite3"
 
-key_cardinality = 100_000
+key_cardinality = 10000
 key_salt = 'toy-redis'
 value_salts = ('a'...'z')
 
@@ -12,7 +12,7 @@ value_max_len = 5_000
 value_min_len = 10
 
 schema = {
-  data: {}
+  data: []
 }
 
 digest_key = Digest::SHA256.new
@@ -25,18 +25,12 @@ digest_key = Digest::SHA256.new
   v_len = rand(value_min_len..value_max_len)
   value = SecureRandom.alphanumeric(v_len)
 
-  schema[:data][key] = value
+  schema[:data].push({
+    key: key,
+    value: value
+  })
 end
 
-db = SQLite3::Database.new("loadtesting/loadtesting.db")
-
-db.execute <<-SQL
-  create table testdata (
-    key text,
-    value text
-  );
-SQL
-
-schema[:data].each do |t|
-  db.execute("insert into testdata values (?, ?)", t)
+File.open("./loadtesting/testdata.json", "w") do |f|
+  f.write(JSON.generate(schema))
 end
