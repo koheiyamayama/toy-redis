@@ -37,24 +37,25 @@ Grafana系サービスを使って負荷試験と監視をする。
 prometheusの概念を理解していないからそのあたりやりつつ導入を進める。
 registryやcollectorとか知らんわ。
 
-- 計装したいこと
+- メトリクス
   - ~各コマンドの実行回数~
     - metrics type count
   - 各コマンドの実行時間の分布
-    - gauge?
     - NewTimer?
-  - キーの総数(時系列)
+  - ~エントリーの総数(時系列)~
     - gauge
-  - キーの増加率
+  - ~エントリーの増加率~
     - count,rate
   - ロック待ちの時間
     - read,writeそれぞれあると良さそう？
     - 調べる
   - go runtime
     - promauto
-
+    - prometheusのセットアップは完了したので、grafanaで必要なメトリクスを可視化する
 - ロギング
   - Grafana Loki使ってみる
+- プロファイル
+  - Grafana Pyroscope使ってみる
 
 - 負荷試験
   - GET,SET,EXPIREを1.適度に流す 2.GETを極端に叩く 3.SETを極端に叩く 4. EXPIREを極端に流す の4パターンを用意し、それぞれの負荷に高低付ける。

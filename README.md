@@ -15,6 +15,15 @@
 - 以下の機能を実装する
   - レプリケーション
 
+# セットアップ
+```
+$ docker compose up --build
+$ cd loadtesting && npm run bundle && cd -
+$ ruby loadtesting/generate_testdata.rb
+$ make build-k6
+$ make run-k6
+```
+
 # 環境変数
 - TOY_REDIS_LOG_LEVEL
   - log/slogパッケージのログレベルに依存する
