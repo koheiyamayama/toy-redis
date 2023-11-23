@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/koheiyamayama/toy-redis/logger"
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,6 +30,11 @@ var (
 	}, []string{"command"})
 
 	goRuntimeCollector = promCollectors.NewGoCollector(promCollectors.WithGoCollectorRuntimeMetrics(promCollectors.MetricsAll))
+
+	totalEntries = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "toy_redis_total_entries",
+		Help: "total of entries in store",
+	})
 )
 
 func main() {
@@ -50,6 +56,7 @@ func main() {
 	reg := prometheus.NewRegistry()
 	reg.Register(goRuntimeCollector)
 	reg.Register(cmdProcessed)
+	reg.Register(totalEntries)
 
 	kv := NewKV()
 
@@ -63,6 +70,14 @@ func main() {
 	}()
 
 	slog.Info("start koheiyamayama/toy-redis")
+	// 3秒ごとにGaugeを更新する
+	// UpdateGaugeみたいな関数を作って呼び出す感じでも良いかもしれない
+	go func() {
+		for {
+			time.Sleep(3 * time.Second)
+			totalEntries.Set(float64(kv.Total()))
+		}
+	}()
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -95,7 +110,9 @@ func handleConn(conn net.Conn, kv *KV) {
 		slog.String("payload", string(payload)),
 	)
 
-	cmdProcessed.With(prometheus.Labels{"command": string(command)}).Inc()
+	go func() {
+		cmdProcessed.With(prometheus.Labels{"command": string(command)}).Inc()
+	}()
 	switch {
 	case bytes.Equal(command, GET):
 		result, err = kv.Get(payload)

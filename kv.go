@@ -94,3 +94,7 @@ func (kv *KV) Del(key []byte) (ok bool, err error) {
 
 	return true, nil
 }
+
+func (kv *KV) Total() int {
+	return len(kv.store)
+}

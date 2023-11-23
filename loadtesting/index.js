@@ -16,19 +16,19 @@ export default function () {
   const kv = data[randomInteger(0, data.length-1)]
 
   let conn = tcp.connect('localhost:9999');
-  console.log("set: ",Set(kv.key, kv.value, randomInteger(300, 360)))
   tcp.write(conn, Set(kv.key, kv.value, randomInteger(300, 360)));
   tcp.close(conn);
 
   sleep(1)
 
   conn = tcp.connect('localhost:9999');
-  console.log("get: ", Get(kv.key))
   tcp.write(conn, Get(kv.key));
 
-  let res = String.fromCharCode(...tcp.read(conn, kv.value.length))
-  check (res, {
-    'verify value': (res) => res.includes(kv.value)
+  // toy-redisのレスポンスにはprefixとしてデータ型を表す記号が1文字付与されるので、テストデータの長さ + 記号分の長さ(=1)分をtcpストリームから読み込む必要がある。
+  let res = String.fromCharCode(...tcp.read(conn, kv.value.length+1))
+  check(res, {
+    'verify value': (res) => res.includes(kv.value),
+    'not found key': (res) => res.includes("not found key")
   });
   tcp.close(conn);
   sleep(1)

@@ -16,12 +16,12 @@ func newConn() net.Conn {
 
 func main() {
 	conn := newConn()
-	key := []byte("hogehogehogehoge")
-	value := []byte("fugafuga2times")
-	exp := []byte("3")
+	key := "key"
+	value := "value"
+	exp := "3"
 	setPayload := fmt.Sprintf("%s\r%s\r%s", key, value, exp)
 	setQuery := fmt.Sprintf("000100000SET%s\n", setPayload)
-	fmt.Println(setQuery)
+	fmt.Println("set: ", setQuery)
 	if n, err := conn.Write([]byte(setQuery)); err == nil {
 		fmt.Printf("write %d bytes\n", n)
 	} else {
@@ -30,12 +30,12 @@ func main() {
 	conn.Close()
 
 	conn = newConn()
-	key = []byte("hogehogehogehoge")
-	value = []byte("fugafuga2times")
-	exp = []byte("5")
+	key = "key"
+	value = "value"
+	exp = "5"
 	setPayload = fmt.Sprintf("%s\r%s\r%s", key, value, exp)
 	setQuery = fmt.Sprintf("000100000SET%s\n", setPayload)
-	fmt.Println(setQuery)
+	fmt.Println("set: ", setQuery)
 	if n, err := conn.Write([]byte(setQuery)); err == nil {
 		fmt.Printf("write %d bytes\n", n)
 	} else {
@@ -44,7 +44,7 @@ func main() {
 	conn.Close()
 
 	conn = newConn()
-	if n, err := conn.Write([]byte("000100000GEThogehogehogehoge\n")); err == nil {
+	if n, err := conn.Write([]byte("000100000GETkey\n")); err == nil {
 		fmt.Printf("write %d bytes\n", n)
 	} else {
 		fmt.Println(err.Error())

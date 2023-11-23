@@ -8,7 +8,7 @@ key_cardinality = 10000
 key_salt = 'toy-redis'
 value_salts = ('a'...'z')
 
-value_max_len = 5_000
+value_max_len = 100
 value_min_len = 10
 
 schema = {
