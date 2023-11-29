@@ -4,7 +4,7 @@ import { SharedArray } from 'k6/data';
 import randomInteger from 'random-int';
 
 export const options = {
-  vus: 1,
+  vus: 30,
   duration: '5m',
 };
 

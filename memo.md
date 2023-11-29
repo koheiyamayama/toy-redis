@@ -37,11 +37,19 @@ Grafana系サービスを使って負荷試験と監視をする。
 prometheusの概念を理解していないからそのあたりやりつつ導入を進める。
 registryやcollectorとか知らんわ。
 
+## 負荷試験
+- コマンドの実行時間
+- 負荷試験結果
+
+## toy-redisサーバー
 - メトリクス
   - ~各コマンドの実行回数~
     - metrics type count
   - 各コマンドの実行時間の分布
-    - NewTimer?
+    - 99%tile
+    - 95%tile
+    - 90%tile
+    - 50%tile
   - ~エントリーの総数(時系列)~
     - gauge
   - ~エントリーの増加率~
@@ -49,7 +57,7 @@ registryやcollectorとか知らんわ。
   - ロック待ちの時間
     - read,writeそれぞれあると良さそう？
     - 調べる
-  - go runtime
+  - ~go runtime~
     - promauto
     - prometheusのセットアップは完了したので、grafanaで必要なメトリクスを可視化する
 - ロギング
