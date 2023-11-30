@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/koheiyamayama/toy-redis/logger"
@@ -35,6 +37,13 @@ var (
 		Name: "toy_redis_total_entries",
 		Help: "total of entries in store",
 	})
+
+	numOfGorutines = prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Name: "toy_redis_num_of_gorutines",
+		Help: "number of gorutines",
+	}, func() float64 {
+		return float64(runtime.NumGoroutine())
+	})
 )
 
 func main() {
@@ -57,6 +66,7 @@ func main() {
 	reg.Register(goRuntimeCollector)
 	reg.Register(cmdProcessed)
 	reg.Register(totalEntries)
+	reg.Register(numOfGorutines)
 
 	kv := NewKV()
 
@@ -75,9 +85,11 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(3 * time.Second)
+			fmt.Println(kv.Total())
 			totalEntries.Set(float64(kv.Total()))
 		}
 	}()
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -132,7 +144,7 @@ func handleConn(conn net.Conn, kv *KV) {
 
 	if err != nil {
 		slog.Info(err.Error())
-		result = []byte(err.Error())
+		result = []byte("+" + err.Error())
 	}
 
 	if _, err := conn.Write(result); err != nil {

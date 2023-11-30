@@ -1,3 +1,7 @@
+# expireを過ぎてもエントリ数が0にならない
+gorutineとほぼ同じペースで減っていくが、ある一定のところからエントリ数が減らなくなる。
+何が起きているのか調査が必要。
+
 # 100vu負荷時の話
 シナリオ上はSET, GETの順でリクエストしているが、サーバーログを見るとGET,SET担ってしまうケースが多発して色々とだめそう。
 何が原因なのか調査する。
@@ -61,7 +65,12 @@ registryやcollectorとか知らんわ。
     - promauto
     - prometheusのセットアップは完了したので、grafanaで必要なメトリクスを可視化する
 - ロギング
-  - Grafana Loki使ってみる
+  - Grafana Dashboardを作成する
+    - クエリを書く
+  - toy-redisからPromtail経由でLokiにログを送りつける
+    - toy-redisに仕込みが必要？
+    - Promtailの設定
+    - Lokiの設定？
 - プロファイル
   - Grafana Pyroscope使ってみる
 
