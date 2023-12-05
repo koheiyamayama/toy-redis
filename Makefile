@@ -9,3 +9,7 @@ run-toy-redis-on-debug-mode:
 
 run-toy-redis:
 	go run .
+
+deploy:
+	GOOS=linux GOARCH=amd64 go build
+	scp toy-redis kohei@192.168.1.12:/home/kohei

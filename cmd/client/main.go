@@ -6,7 +6,7 @@ import (
 )
 
 func newConn() net.Conn {
-	conn, err := net.Dial("tcp", "localhost:9999")
+	conn, err := net.Dial("tcp", "192.168.1.12:9999")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

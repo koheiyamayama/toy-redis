@@ -4,3 +4,5 @@ node_modules
 dist
 testdata.json
 loadtesting/loadtesting.db
+tmp
+toy-redis
