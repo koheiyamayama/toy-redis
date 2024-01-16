@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
+	"runtime"
 	"time"
 
+	"github.com/grafana/pyroscope-go"
 	"github.com/koheiyamayama/toy-redis/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	promCollectors "github.com/prometheus/client_golang/prometheus/collectors"
@@ -41,13 +41,9 @@ var (
 func main() {
 	level := new(slog.LevelVar)
 	level.Set(GetLogLevel())
-	f, err := os.OpenFile("/var/log/toy-redis.log", os.O_RDWR, os.ModeAppend)
-	if err != nil {
-		panic(fmt.Errorf("can't configure log file: %w", err))
-	}
 
 	jHandler := slog.NewJSONHandler(
-		f,
+		GetLogFilePath(),
 		&slog.HandlerOptions{Level: level},
 	)
 	logger := slog.New(jHandler)
@@ -63,6 +59,38 @@ func main() {
 	reg.Register(goRuntimeCollector)
 	reg.Register(cmdProcessed)
 	reg.Register(totalEntries)
+
+	runtime.SetMutexProfileFraction(5)
+	runtime.SetBlockProfileRate(5)
+
+	pyroscope.Start(pyroscope.Config{
+		ApplicationName: "toy-redis",
+
+		// replace this with the address of pyroscope server
+		ServerAddress: GetPyroscopeServerAddress(),
+
+		// you can disable logging by setting this to nil
+		Logger: pyroscope.StandardLogger,
+
+		// you can provide static tags via a map:
+		Tags: map[string]string{"hostname": GetHostName()},
+
+		ProfileTypes: []pyroscope.ProfileType{
+			// these profile types are enabled by default:
+			pyroscope.ProfileCPU,
+			pyroscope.ProfileAllocObjects,
+			pyroscope.ProfileAllocSpace,
+			pyroscope.ProfileInuseObjects,
+			pyroscope.ProfileInuseSpace,
+
+			// these profile types are optional:
+			pyroscope.ProfileGoroutines,
+			pyroscope.ProfileMutexCount,
+			pyroscope.ProfileMutexDuration,
+			pyroscope.ProfileBlockCount,
+			pyroscope.ProfileBlockDuration,
+		},
+	})
 
 	kv := NewKV()
 
@@ -120,22 +148,25 @@ func handleConn(conn net.Conn, kv *KV) {
 	go func() {
 		cmdProcessed.With(prometheus.Labels{"command": string(command)}).Inc()
 	}()
-	switch {
-	case bytes.Equal(command, GET):
-		result, err = kv.Get(payload)
-	case bytes.Equal(command, SET):
-		key, value, exp := ParseSet(payload)
-		kv.Set(key, value, exp)
-	case bytes.Equal(command, EXPIRE):
-		key, exp := ParseExpire(b)
-		ok, eErr := kv.Expire(key, exp)
-		if !ok {
-			result = nil
-			err = eErr
+
+	pyroscope.TagWrapper(context.Background(), pyroscope.Labels("handling_command", string(command)), func(ctx context.Context) {
+		switch {
+		case bytes.Equal(command, GET):
+			result, err = kv.Get(payload)
+		case bytes.Equal(command, SET):
+			key, value, exp := ParseSet(payload)
+			kv.Set(key, value, exp)
+		case bytes.Equal(command, EXPIRE):
+			key, exp := ParseExpire(b)
+			ok, eErr := kv.Expire(key, exp)
+			if !ok {
+				result = nil
+				err = eErr
+			}
+		default:
+			result = []byte("NOP")
 		}
-	default:
-		result = []byte("NOP")
-	}
+	})
 
 	if err != nil {
 		slog.Info(err.Error())

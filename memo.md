@@ -67,6 +67,12 @@ scrape_configs:
 手順はOpenAIの言う通りにしたら上手く行った。
 https://chat.openai.com/share/f853d5ad-172c-4a46-b0b4-6d512d01b0ca
 
+Grafanaに片っ端からダッシュボードを作ったが、途中で力尽きた。go_gc_xxx系でいくつか作ってないものがある。
+
+## Pyroscope
+worker-node-13に入れる
+
+
 # expireを過ぎてもエントリ数が0にならない
 gorutineとほぼ同じペースで減っていくが、ある一定のところからエントリ数が減らなくなる。
 何が起きているのか調査が必要。
